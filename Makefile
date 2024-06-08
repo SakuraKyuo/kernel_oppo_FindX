@@ -413,6 +413,81 @@ KBUILD_AFLAGS_MODULE  := -DMODULE
 KBUILD_CFLAGS_MODULE  := -DMODULE
 KBUILD_LDFLAGS_MODULE := -T $(srctree)/scripts/module-common.lds
 
+# ifdef VENDOR_EDIT
+# jiangyg@OnlineRd.PM, 2013/10/15, add enviroment variant
+KBUILD_CFLAGS +=   -DVENDOR_EDIT
+KBUILD_CPPFLAGS += -DVENDOR_EDIT
+CFLAGS_KERNEL +=   -DVENDOR_EDIT
+CFLAGS_MODULE +=   -DVENDOR_EDIT
+#Added by guanling.yang@SCM.ROM，2015-11-23 add for disable fastboot modem at release soft
+ifneq ($(filter release cts cta,$(OPPO_BUILD_TYPE)),)
+  CFLAGS_KERNEL += -DDISABLE_FASTBOOT_CMDS=1
+endif
+ifeq ($(OPPO_TARGET_DEVICE),MSM_16017)
+  CFLAGS_KERNEL += -DIS_PROJECT_16017
+endif
+
+#xing.xiong@BSP.Kernel.Driver, 2018/04/23, Add for CNFIDENTIAL version
+ifeq ($(CONFIDENTIAL_VERSION),1)
+KBUILD_CFLAGS += -DCONFIG_CONFIDENTIAL_VERSION
+endif
+
+ifeq ($(SPECIAL_OPPO_CONFIG),1)
+KBUILD_CFLAGS += -DCONFIG_OPPO_SPECIAL_BUILD
+endif
+ifneq ($(SPECIAL_OPPO_CONFIG),1)
+ifeq ($(filter release cts,$(OPPO_BUILD_TYPE)),)
+ifeq ($(filter cmcctest cmccfield allnetcttest allnetcmcctest allnetcmccfield,$(NET_BUILD_TYPE)),)
+KBUILD_CFLAGS += -DCONFIG_OPPO_DAILY_BUILD
+endif
+endif
+endif
+#ifdef VENDOR_EDIT
+#Bin.Yan@PSW.AD.BuildConfig.BaseConfig.1068615, 2017/08/28,Add for disallow system remount
+ifneq ($(SPECIAL_OPPO_CONFIG),1)
+    ifneq ($(filter release,$(OPPO_BUILD_TYPE)),)
+        ifneq ($(OPPO_ALLOW_KEY_INTERFACES),true)
+            ifeq ($(filter allnetcttest allnetcmcctest allnetcmccfield allnetctfield,$(NET_BUILD_TYPE)),)
+                KBUILD_CFLAGS += -DOPPO_DISALLOW_KEY_INTERFACES
+            endif
+        endif
+    endif
+endif
+#endif /* VENDOR_EDIT */
+
+ifeq ($(NET_BUILD_TYPE),cmcctest)
+KBUILD_CFLAGS += -DOPPO_CMCC_TEST
+endif
+ifeq ($(NET_BUILD_TYPE),cmccfield)
+KBUILD_CFLAGS += -DOPPO_CMCC_TEST
+endif
+ifeq ($(NET_BUILD_TYPE),cmcc)
+KBUILD_CFLAGS += -DOPPO_CMCC_MP
+endif
+ifeq ($(NET_BUILD_TYPE),cutest)
+KBUILD_CFLAGS += -DOPPO_CU_TEST
+endif
+ifeq ($(NET_BUILD_TYPE),cu)
+KBUILD_CFLAGS += -DOPPO_CU_CLIENT
+endif
+ifeq ($(NET_BUILD_TYPE),cmcctest_dm)
+KBUILD_CFLAGS += -DOPPO_CMCC_TEST
+endif
+ifeq ($(OPPO_BUILD_TYPE),cta)
+KBUILD_CFLAGS += -DOPPO_CTA_FLAG
+KBUILD_CPPFLAGS += -DOPPO_CTA_FLAG
+endif
+ifeq ($(OPPO_TARGET_DEVICE),MSM_14042)
+KBUILD_CFLAGS += -DOPPO_CU_TEST
+endif
+ifneq ($(filter $(OPPO_TARGET_DEVICE),MSM_14037 MSM_14039 MSM_14040 MSM_14065),)
+KBUILD_CFLGAS += -DCONFIG_ENHANCED_LMK
+CFLAGS_KERNEL +=   -DCONFIG_ENHANCED_LMK
+CFLAGS_MODULE +=   -DCONFIG_ENHANCED_LMK
+KBUILD_CPPFLAGS += -DCONFIG_ENHANCED_LMK
+endif
+#endif /*VENDOR_EDIT*/
+
 # Read KERNELRELEASE from include/config/kernel.release (if it exists)
 KERNELRELEASE = $(shell cat include/config/kernel.release 2> /dev/null)
 KERNELVERSION = $(VERSION)$(if $(PATCHLEVEL),.$(PATCHLEVEL)$(if $(SUBLEVEL),.$(SUBLEVEL)))$(EXTRAVERSION)
